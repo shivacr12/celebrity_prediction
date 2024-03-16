@@ -14,7 +14,7 @@ import pickle
 
 # Define paths
 data_dir = os.path.join(Path(sys.path[0]).resolve(), 'data')
-model_dir = os.path.join(Path(sys.path[0]).resolve(), 'model_relics')
+model_dir = os.path.join(Path(sys.path[0]).resolve(), 'model_artifacts')
 train_dir = os.path.join(data_dir, 'train')
 validation_dir = os.path.join(data_dir, 'validation')
 
@@ -52,23 +52,33 @@ def extract_face_embeddings(images_dir):
 train_embeddings, train_labels = extract_face_embeddings(train_dir)
 validation_embeddings, validation_labels = extract_face_embeddings(validation_dir)
 
+print('model fitting on training data')
 # Train a classifier
 clf = make_pipeline(StandardScaler(), SVC())
 clf.fit(train_embeddings, train_labels)
 
 # Evaluate the classifier
+print('model evaluation')
 predictions = clf.predict(validation_embeddings)
 accuracy = accuracy_score(validation_labels, predictions)
 print('Accuracy:', accuracy)
 
+if accuracy > 0.9:
+    # Retrain on both train and validation sets
+    print('model retrain')
+    combined_embeddings = np.concatenate([train_embeddings, validation_embeddings])
+    combined_labels = np.concatenate([train_labels, validation_labels])
+    clf.fit(combined_embeddings, combined_labels)
 
+    # Save the model
+    model_dir = 'models'
+    if not os.path.exists(model_dir):
+        os.makedirs(model_dir)
 
-if not os.path.exists(model_dir):
-    os.makedirs(model_dir)
+    model_filename = os.path.join(model_dir, 'celebrity_classifier.pkl')
+    with open(model_filename, 'wb') as f:
+        pickle.dump(clf, f)
 
-
-model_filename = os.path.join(model_dir, 'celebrity_classifier.pkl')
-with open(model_filename, 'wb') as f:
-    pickle.dump(clf, f)
-
-print('Model saved successfully as', model_filename)
+    print('Model saved successfully as', model_filename)
+else:
+    print('Accuracy is not above 90%, model not saved.')
