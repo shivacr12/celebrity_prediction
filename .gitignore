@@ -154,7 +154,13 @@ dmypy.json
 cython_debug/
 
 # Additional folders or files
-data/
+data/new_data
+data/train
+data/validation
+data/test
+model_artifacts/
+uploaded_images/
+
 # PyCharm
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
 #  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
