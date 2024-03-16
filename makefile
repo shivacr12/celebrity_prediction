@@ -1,6 +1,7 @@
 # Makefile for automatic execution of data_preprocess.py and model_train.py
 
 # Load configuration
+# Load configuration
 CONFIG := $(shell cat config.yml)
 FOLDER_WATCH_PATH := $(shell echo $(CONFIG) | jq -r '.folder_watch.path')
 
@@ -10,7 +11,7 @@ FOLDER_WATCH_PATH := $(shell echo $(CONFIG) | jq -r '.folder_watch.path')
 # Target to watch for changes in the new_data folder
 watch:
 	@echo "Watching for changes in $(FOLDER_WATCH_PATH)"
-	@fswatch -o $(FOLDER_WATCH_PATH) | xargs -n1 -I{} make preprocess train
+	@fswatch -o $(FOLDER_WATCH_PATH)/data/new_data | xargs -n1 -I{} make preprocess train
 
 # Target to preprocess the data
 preprocess:
