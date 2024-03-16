@@ -1,0 +1,39 @@
+name: Data Preprocessing and Model Training
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  preprocess_and_train:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.x
+
+      - name: Install Dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Check for Changes in new_data Folder
+        id: check_changes
+        run: |
+          if git diff --name-only HEAD^ HEAD | grep -q "^data/new_data/"; then
+            echo "::set-output name=changes::true"
+          else
+            echo "::set-output name=changes::false"
+          fi
+
+      - name: Preprocess Data and Train Model
+        if: steps.check_changes.outputs.changes == 'true'
+        run: |
+          python data_preprocess.py
+          python model_train.py
