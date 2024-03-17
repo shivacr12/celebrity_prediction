@@ -37,20 +37,22 @@ def extract_face_embedding(image_path):
 
 def extract_face_embeddings(images_dir):
     embeddings = []
+    label_dict = {}
     labels = []
     for label, celebrity_dir in enumerate(sorted(os.listdir(images_dir))):
         print('label, celebrity_dir : ',label, celebrity_dir)
+        label_dict[label] = celebrity_dir
         celebrity_path = os.path.join(images_dir, celebrity_dir)
         for image_file in os.listdir(celebrity_path):
             image_path = os.path.join(celebrity_path, image_file)
             embedding = extract_face_embedding(image_path = image_path)
             embeddings.append(embedding)
             labels.append(label)
-    return np.array(embeddings).reshape(len(embeddings), -1), np.array(labels)
+    return np.array(embeddings).reshape(len(embeddings), -1), np.array(labels),label_dict
 
 
-train_embeddings, train_labels = extract_face_embeddings(train_dir)
-validation_embeddings, validation_labels = extract_face_embeddings(validation_dir)
+train_embeddings, train_labels, label_dict = extract_face_embeddings(train_dir)
+validation_embeddings, validation_labels, label_dict = extract_face_embeddings(validation_dir)
 
 print('model fitting on training data')
 # Train a classifier
@@ -70,15 +72,14 @@ if accuracy > 0.9:
     combined_labels = np.concatenate([train_labels, validation_labels])
     clf.fit(combined_embeddings, combined_labels)
 
-    # Save the model
-    model_dir = 'models'
+    
     if not os.path.exists(model_dir):
         os.makedirs(model_dir)
 
     model_filename = os.path.join(model_dir, 'celebrity_classifier.pkl')
-    with open(model_filename, 'wb') as f:
-        pickle.dump(clf, f)
+    data_to_save = {'classifier': clf, 'label_dict': label_dict}
 
-    print('Model saved successfully as', model_filename)
+    with open(model_filename, 'wb') as f:
+        pickle.dump(data_to_save, f)
 else:
     print('Accuracy is not above 90%, model not saved.')

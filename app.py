@@ -17,7 +17,10 @@ image_dir_save = os.path.join(Path(sys.path[0]).resolve(), 'uploaded_images')
 model_filename = os.path.join(Path(sys.path[0]).resolve(),'model_artifacts','celebrity_classifier.pkl')
 
 with open(model_filename, 'rb') as f:
-    clf = pickle.load(f)
+    saved_data = pickle.load(f)
+
+clf = saved_data['classifier']
+label_dict = saved_data['label_dict']
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 mtcnn = MTCNN(keep_all=True, device=device)
@@ -51,9 +54,9 @@ async def predict_image(image: UploadFile = File(...)):
 
         embedding = extract_face_embedding(image=f'{image_dir_save}/{image.filename}')
 
-        prediction = str(clf.predict(embedding)[0])
+        prediction = clf.predict(embedding)[0]
 
-        return JSONResponse(content={'prediction': prediction})
+        return JSONResponse(content={'prediction': label_dict[prediction]})
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
